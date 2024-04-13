@@ -31,4 +31,15 @@ router.post( '/', async( req, res ) => {
     });
 })
 
+
+router.get('/all',(req,res)=>{
+    let email=req.body.email;
+    StartUp.find({email:email}).then((data)=>{
+        if(data)
+            res.send(data[0].posts);
+         else    
+            res.status(401).send("No user found");
+    })
+})
+
 module.exports = router;
