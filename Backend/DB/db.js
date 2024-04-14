@@ -102,6 +102,30 @@ const StartUpSchema=new mongoose.Schema({
 
     }
 })
+
+const PostsSchema=new mongoose.Schema({
+  post:{
+    type:[{
+      name:String,
+      email:String,
+      date:String,
+      caption:String,
+      Image:String,
+      hashtag:[{
+        tag:String
+      }],
+      likes:Number,
+      Comments:[{
+        Count:Number,
+        list:[{
+          Comments:String
+        }]
+      }]
+    }]
+
+  }
+})
+
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -129,11 +153,13 @@ const UserSchema = new mongoose.Schema({
 const Invester=mongoose.model("Invester",InvesterSchema);
 const User=mongoose.model("User",UserSchema);
 const StartUp=mongoose.model("StartUp",StartUpSchema);
+const Posts=mongoose.model( "Posts" , PostsSchema)
 
 module.exports={
    Invester,
    StartUp,
-   User
+   User,
+   Posts
 }
 
 

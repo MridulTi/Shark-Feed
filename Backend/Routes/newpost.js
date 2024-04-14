@@ -1,5 +1,5 @@
 const express = require('express');
-const { StartUp } = require('../DB/db');
+const { StartUp, Posts } = require('../DB/db');
 const router = express.Router();
 
 
@@ -16,12 +16,11 @@ router.post( '/', async( req, res ) => {
     
         try {
             // Find the startup by its email
-             await StartUp.updateOne({email:req.body.email},{$push:{posts:post}});
+             await StartUp.updateOne({email:req.body.email},{$push:{posts:{$each:[post],$position:0}}});
             
-    
-           
-    
-            console.log('New post added successfully:', post);
+             await Posts.create({post:post});
+            
+            console.log('New post added successfully:');
         } catch (error) {
             console.error('Error adding new post:', error.message);
         }
@@ -40,6 +39,10 @@ router.get('/all',(req,res)=>{
          else    
             res.status(401).send("No user found");
     })
+})
+
+router.get('/feed',(req,res)=>{
+    Posts.find().then((data)=>res.send(data));
 })
 
 module.exports = router;
