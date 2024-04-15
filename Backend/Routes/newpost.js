@@ -16,7 +16,7 @@ router.post( '/', async( req, res ) => {
     
         try {
             // Find the startup by its email
-             await StartUp.updateOne({email:req.body.email},{$push:{posts:{$each:[post],$position:0}}});
+             await StartUp.findOneAndUpdate({email:req.body.email},{$push:{posts:{$each:[post],$position:0}}})
             
              await Posts.create({post:post});
             
