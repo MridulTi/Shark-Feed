@@ -9,6 +9,7 @@ import UploadPage from './Pages/More/Onboarding/UploadPage';
 
 import Onboard from './Pages/More/Onboarding/Onboard';
 import Profile from './Pages/Profile/Profile';
+import ProfileOther from './Pages/Profile/ProfileOther';
 
 
 function App() {
@@ -41,6 +42,10 @@ function App() {
         {
           path:"/Profile",
           element:<Profile/>
+        },
+        {
+          path:"/:slugs",
+          element:<ProfileOther/>
         }
       ],
     },

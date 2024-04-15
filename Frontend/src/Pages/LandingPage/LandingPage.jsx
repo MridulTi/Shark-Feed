@@ -124,7 +124,7 @@ function Login(){
   return(
     <div className='grid gap-4'>
       <Input label="Email" name="email" onChange={(e)=>handleInputchange(e)}  />
-      <Input label="Password" name="password" onChange={(e)=>handleInputchange(e)}  />
+      <Input label="Password" type='password' name="password" onChange={(e)=>handleInputchange(e)}  />
       <Button variant="gradient" onClick={(e)=>handleLogin(e)}>Login</Button>
     </div>
   )

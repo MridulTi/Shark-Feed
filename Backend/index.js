@@ -11,6 +11,7 @@ const newbid=require('./Routes/newbid')
 const interest=require('./Routes/interest');
 
 const dotenv = require('dotenv');
+const { Profile } = require('./Routes/profile');
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use(bodyParser.json());
 // API routes
 app.use('/api', api);
 app.use('/newpost',newpost)
+app.use('/profile',Profile)
 
 app.use('/newbid',newbid)
 

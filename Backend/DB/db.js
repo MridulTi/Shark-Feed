@@ -103,28 +103,23 @@ const StartUpSchema=new mongoose.Schema({
     }
 })
 
-const PostsSchema=new mongoose.Schema({
-  post:{
-    type:[{
-      name:String,
-      email:String,
-      date:String,
-      caption:String,
-      Image:String,
-      hashtag:[{
-        tag:String
-      }],
-      likes:Number,
-      Comments:[{
-        Count:Number,
-        list:[{
-          Comments:String
-        }]
+const PostsSchema = new mongoose.Schema({
+  posts: {
+    type: [{
+      name: String,
+      email: String,
+      date: String,
+      caption: String,
+      Image: [String], // Array of strings for image URLs
+      hashtag: [{ tag: String }], // Array of objects with a single string property
+      likes: Number,
+      comments: [{
+        Count: Number,
+        list: [{ Comment: String }] // Array of strings for comments
       }]
     }]
-
   }
-})
+});
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -150,6 +145,50 @@ const UserSchema = new mongoose.Schema({
     default: false
   }
 });
+const profileSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  companyName: {
+    type: String,
+    required: true
+  },
+  profileType: {
+    type: String,
+    enum: ['Individual', 'Company'],
+    required: true
+  },
+  bio: {
+    type: String,
+    default: ''
+  },
+  currentInvestors: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Investor'
+  }],
+  connections: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Profile'
+  }],
+  numberOfInvestors: {
+    type: Number,
+    default: 0
+  },
+  stats: {
+    // Define your stats schema here
+  },
+  activity: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Activity'
+  }],
+  products: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product'
+  }],
+}, { timestamps: true });
+
+const Profile = mongoose.model('Profile', profileSchema);
 const Invester=mongoose.model("Invester",InvesterSchema);
 const User=mongoose.model("User",UserSchema);
 const StartUp=mongoose.model("StartUp",StartUpSchema);
@@ -159,7 +198,8 @@ module.exports={
    Invester,
    StartUp,
    User,
-   Posts
+   Posts,
+   Profile
 }
 
 
