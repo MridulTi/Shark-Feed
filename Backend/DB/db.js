@@ -88,7 +88,7 @@ const StartUpSchema=new mongoose.Schema({
         date:String,
         caption:String,
         Image:String,
-        hashtag:Array,
+        hashtag:[{ tag: String }],
         likes:Number,
         Comments:[{
           Count:Number,

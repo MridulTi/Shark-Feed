@@ -1,5 +1,5 @@
 const express = require('express');
-const Profile = require('./Db/db'); // Assuming Profile model file path
+const {Profile,User} = require('../DB/db'); // Assuming Profile model file path
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ router.get('/profile/:query', async (req, res) => {
     const profile = await Profile.findOne({ $or: [{ email: query }, { username: query }] });
 
     if (!profile) {
-      return res.status(404).json({ message: 'Profile not found' });
+      res.status(404).json({ message: 'Profile not found' });
     }
 
     res.status(200).json({ profile });
@@ -29,7 +29,7 @@ router.post('/update-profile/:userId', async (req, res) => {
       const user = await User.findById(userId);
   
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        res.status(404).json({ message: 'User not found' });
       }
   
       // Update profile information based on request body
