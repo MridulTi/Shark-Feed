@@ -1,8 +1,26 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Avatar } from "@material-tailwind/react";
 import { Bid, Post, PostCards } from '../../Components/Cards';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
 export default function Dashboard() {
+
   window.scrollTo(0,0)
+
+  const [feedData, setFeedData] = useState([]);
+
+  useEffect(() => {
+    // Make GET request to localhost:3000/feed
+    axios.get('http://localhost:3000/newpost/feed')
+      .then(response => {
+        // Update state with response data
+        // console.log(response.data)
+        setFeedData(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching feed:', error);
+      });
+  }, []);
 
   return (
     <div className='h-full w-screen grid justify-center items-center px-32'>
@@ -10,18 +28,13 @@ export default function Dashboard() {
       <MyInfo />
       <div className='rounded-xl grid gap-6 col-span-1'>
         <Post/>
-        <div className='h-fit grid grid-flow-col gap-2'>
-          <PostCards/>
-          <Bid/>
-        </div>
-        <div className='h-fit grid grid-flow-col gap-2'>
-          <PostCards/>
-          <Bid/>
-        </div>
-        <div className='h-fit grid grid-flow-col gap-2'>
-          <PostCards/>
-          <Bid/>
-        </div>
+        {feedData.map((post, index) => (
+            <div key={index} className='h-fit grid grid-flow-col gap-2'>
+              {/* {console.log(post.post[0].caption)} */}
+              <PostCards post={post} />
+              <Bid />
+            </div>
+          ))}
         
       </div>
       <Trending/>
@@ -33,7 +46,7 @@ export default function Dashboard() {
 function MyInfo(){
   return(
     <div className='h-fit bg-gray-5 p-5 grid place-items-center rounded-xl'>
-      <Avatar src="https://docs.material-tailwind.com/img/face-2.jpg" alt="avatar" className='border-4 border-base-accent' size='xxl'/>
+      <Link to="/Profile"><Avatar src="https://docs.material-tailwind.com/img/face-2.jpg" alt="avatar" className='border-4 border-base-accent' size='xxl'/></Link>
       <div className='text-center'>
         <h1 className='font-semibold text-md py-2'>Mridul Tiwari</h1>
         <h1 className='font-semibold text-sm py-2 text-gray-6'>Unicorn: Bharat Pay | Accenture</h1>

@@ -2,7 +2,7 @@ const express = require('express');
 const { StartUp,Invester } = require('../DB/db');
 const router = express.Router();
 
-router.post('/',async(req,res)=>{
+router.post('/bit',async(req,res)=>{
     let bidForInvester={
         companyName: req.body.companyName,
         Equity:req.body.Equity,
