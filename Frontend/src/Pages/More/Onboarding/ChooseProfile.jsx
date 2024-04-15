@@ -5,14 +5,12 @@ import { Link } from 'react-router-dom';
 
 export default function ChooseProfile() {
   return (
-      <div className="grid place-items-center h-screen w-screen">
+      <div className="grid place-items-center h-fit w-screen ">
         <div >
           <Header />
           <Card />
-          <Footer />
-          <div className='pt-10'>
-          <Progress value={10} className='bg-gray-3'/>
-          </div>
+          {/* <Footer /> */}
+
         </div>
         
       </div>

@@ -13,15 +13,12 @@ export default function UploadPage() {
 
     return (
         <>
-            <div className=" grid gap-4 place-items-center min-h-screen py-6 justify-center items-center">
+            <div className=" grid gap-4 place-items-center h-fit justify-center items-center bg-base-secondary">
+                <div className='bg-gray-5 p-6 rounded-xl grid gap-12'>
                 <Header />
                 <MainContent />
-                {/* <Footer /> */}
-                <div className='py-4 grid grid-flow-col place-content-center gap-4 m-2'>
-                    <Link to="/Onboarding"><button className='bg-gray-5 border border-gray-3 p-1 grid place-items-center aspect-square'><RiArrowDropLeftLine className='text-4xl' /></button></Link>
-                    <Link to="/Dashboard"><button onClick={handleInfo} className='bg-base-accent py-2 px-6 grid place-items-center text-gray-5 text-xl'>Next</button></Link>
                 </div>
-                <Progress value={20} className='bg-gray-3 mb-12'/>
+                {/* <Footer /> */}
             </div>
         </>
     )
