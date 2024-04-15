@@ -23,7 +23,7 @@ import {
 
 
 
-export default function Profile() {
+export default function ProfileOther() {
     return (
         <>
             <div className=" grid grid-flow-col min-h-screen place-items-start px-52 mx-52 gap-6">

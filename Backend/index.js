@@ -11,7 +11,7 @@ const newbid=require('./Routes/newbid')
 const interest=require('./Routes/interest');
 
 const dotenv = require('dotenv');
-const { Profile } = require('./Routes/profile');
+const Profile = require('./Routes/profile');
 
 dotenv.config();
 

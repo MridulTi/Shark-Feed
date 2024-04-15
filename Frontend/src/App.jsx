@@ -10,6 +10,7 @@ import UploadPage from './Pages/More/Onboarding/UploadPage';
 import Onboard from './Pages/More/Onboarding/Onboard';
 import Profile from './Pages/Profile/Profile';
 import ProfileOther from './Pages/Profile/ProfileOther';
+import InfoDeck from './Pages/More/Onboarding/InfoDeck';
 
 
 function App() {
@@ -29,6 +30,10 @@ function App() {
           path:"/Onboarding/2",
           element:<UploadPage/>
         },
+        {
+          path:"/Onboarding/3",
+          element:<InfoDeck/>
+        }
       ]
     },
     {
