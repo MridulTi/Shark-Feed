@@ -1,10 +1,10 @@
 import mongoose from "mongoose"
-import { asyncHandler } from "../utils/asyncHandler"
-import { User } from "../models/User.models"
-import { ApiResponse } from "../utils/ApiResponse"
-import { ApiError } from "../utils/ApiError"
-import { Comment } from "../models/like-comment.models"
-import { Post } from "../models/Post.models"
+import { User } from "../models/User.models.js"
+import { ApiResponse } from "../utils/ApiResponse.js"
+import { ApiError } from "../utils/ApiError.js"
+import { Comment } from "../models/like-comment.models.js"
+import { Post } from "../models/Post.models.js"
+import { asyncHandler } from "../utils/asyncHandler.js"
 
 const getLikeCount=asyncHandler(async(req,res)=>{
     const user=await User.aggregate([
