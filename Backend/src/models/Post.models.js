@@ -20,15 +20,9 @@ const PostsSchema = new mongoose.Schema({
         type:String,
         required:true
     },
-    isPublished:{
-        type:Boolean,
-        required:true
-    },
-    tags:[
-        {
-            type:String
-        }
-    ]
+    tags:{
+        type:String
+    }
 },{timestamps:true});
 
 PostsSchema.plugin(mongooseAggregatePaginate)
