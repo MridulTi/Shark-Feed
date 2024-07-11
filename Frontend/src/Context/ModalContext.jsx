@@ -35,9 +35,9 @@ export const ModalProvider = ({ children }) => {
   }
   console.log(Images)
   
-  const posting=()=>{
-    axios.post("http://localhost:3000/newpost/",post).then((data)=>{
-      if(data.status==201){
+  const posting=(formData)=>{
+    axios.post("api/v1/posts/post",formData).then((data)=>{
+      if(data.status==201 || data.status==200){
         console.log(data)
       }
     }).catch((err)=>console.log(err))

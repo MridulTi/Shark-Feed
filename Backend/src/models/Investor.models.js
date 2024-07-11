@@ -1,14 +1,17 @@
 import mongoose from "mongoose";
 
-const subscriptionSchema=new mongoose.Schema({
-    subscriber:{
+const InvestorSchema=new mongoose.Schema({
+    owner:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User"
     },
-    channel:{
+    companyTo:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User"
+    },
+    shares:{
+        type:String
     }
 },{timestamps:true})
 
-export const Subscription=mongoose.model("Subscription",subscriptionSchema)
+export const Investor=mongoose.model("Bid",InvestorSchema)

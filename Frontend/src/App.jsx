@@ -49,7 +49,7 @@ function App() {
           element:<Profile/>
         },
         {
-          path:"/:slugs",
+          path:"/:username",
           element:<ProfileOther/>
         }
       ],

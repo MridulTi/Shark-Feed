@@ -2,36 +2,6 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt"
 
-// const followerSchema=mongoose.Schema({
-//     followerNumber:{
-//         type:Number,
-//         required:true,
-//         default:0
-//     },
-//     followerUser:[
-//         {
-//             type:mongoose.Schema.Types.ObjectId,
-//             ref:"User"
-//         }
-//     ]
-// })
-// const Follower=mongoose.model("Follower",followerSchema);
-
-// const followingSchema=mongoose.Schema({
-//     followingNumber:{
-//         type:Number,
-//         required:true,
-//         default:0
-//     },
-//     followingUser:[
-//         {
-//             type:mongoose.Schema.Types.ObjectId,
-//             ref:"User"
-//         }
-//     ]
-// })
-// const Following=mongoose.model("Following",followingSchema);
-
 const userSchema = new mongoose.Schema({
     userName: {
         type: String,
@@ -67,14 +37,20 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    // followers:{
-    //     type:mongoose.Schema.Types.ObjectId,
-    //     ref:"Follower"
-    // },
-    // following:{
-    //     type:mongoose.Schema.Types.ObjectId,
-    //     ref:"Following"
-    // },
+    bio: {
+        type: String,
+        default: ''
+    },
+    website:{
+        type:String,
+    },
+    birthDate:{
+        type:Date
+    },
+    currentInvestors: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     category:{
         type:String,
         enum: ['Startup', 'Investor'],
@@ -109,7 +85,7 @@ userSchema.methods.generateAccessToken=async function(){
         {
             _id:this._id,
             email:this.email,
-            username:this.username,
+            userName:this.userName,
             fullName:this.fullName
         },
         process.env.ACCESS_TOKEN_SECRET,

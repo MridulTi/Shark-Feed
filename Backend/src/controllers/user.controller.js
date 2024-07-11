@@ -5,6 +5,8 @@ import { User } from "../models/User.models.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import mongoose from "mongoose"
 import jwt  from "jsonwebtoken"
+import { Subscription } from "../models/Subscription.models.js"
+import { Post } from "../models/Post.models.js"
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -43,6 +45,7 @@ const registerUser = asyncHandler(async (req, res) => {
         field?.trim() === "")) {
         throw new ApiError(400, "All fields are required")
     }
+
     const existedUser = await User.findOne({
         $or: [{ userName }, { email }]
     })
@@ -196,25 +199,70 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 })
 
 const getCurrentUser = asyncHandler(async (req, res) => {
+
+    const channel = await User.aggregate([
+        {
+            $match:{
+                _id:new mongoose.Types.ObjectId(req.user._id)
+            },
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"channel",
+                as:"subscribers"
+            },
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"subscriber",
+                as:"subscribedTo"
+            },
+        },
+        {
+            $addFields:{
+                subscribersCount:{
+                    $size:"$subscribers"
+                },
+                channelsSubscribedToCount:{
+                    $size:"$subscribedTo"
+                },
+                isSubscribed:{
+                    $cond:{
+                        if:{$in:[req.user?._id,"$subscribers.subscriber"]},
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },
+        
+    ])
+    console.log(channel)
     return res.status(200)
-        .json(200, req.user, "Current User Fetched Successfully")
+        .json(new ApiResponse(200, channel[0], "Current User Fetched Successfully"))
 })
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-    const { fullName, email } = req.body
+    const { fullName, email,bio,website,BirthDate} = req.body
 
-    if (!fullName || !email) {
-        throw new ApiError(400, "All fields are required")
+    if (!(fullName || email || bio || website|| BirthDate)) {
+        throw new ApiError(400, "Some field changes are required")
     }
+    const updateFields = {};
+    if (fullName) updateFields.fullName = fullName;
+    if (email) updateFields.email = email;
+    if (bio) updateFields.bio = bio;
+    if (website) updateFields.website = website;
+    if (BirthDate) updateFields.birthDate = BirthDate;
 
-    const user = User.findByIdAndUpdate(
-        req.user?._id
-        , {
-            $set: {
-                fullName,
-                email: email
-            }
-        },
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        { $set: updateFields },
         { new: true }
     ).select("-password");
 
@@ -239,8 +287,31 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
     .json(new ApiResponse(200,user,"Avatar Updated"))
 })
 
+const updateSubscription=asyncHandler(async(req,res)=>{
+    const {_id}=new mongoose.Types.ObjectId(req.body._id)
+    console.log(req.body._id)
+
+    const user=await Subscription.findOne({subscriber:req.user._id,channel:_id});
+    let subscribed=null;
+    if (user){
+        subscribed=await Subscription.deleteOne({subscriber:req.user._id,channel:_id})
+    }
+    else{
+        subscribed=await Subscription.create({
+            subscriber:req.user?._id,
+            channel:_id
+        })
+    }
+    
+
+    res.status(201)
+    .json(new ApiResponse(201,subscribed,"Subscription updated"))
+
+})
+
 const getUserChannelProfile=asyncHandler(async(req,res)=>{
     const {username}=req.params
+    console.log(username)
 
     if (!username?.trim()) throw new ApiError(401,"Username is missing");
 
@@ -288,10 +359,13 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
                 fullName:1,
                 email:1,
                 username:1,
+                bio:1,
+                avatar:1,
+                category:1,
+                companyName:1,
                 subscribersCount:1,
                 channelsSubscribedToCount:1,
                 isSubscribed:1,
-                avatar:1
             }
         }
     ])
@@ -304,59 +378,90 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
 })
 
 const getPostHistory=asyncHandler(async(req,res)=>{
-    const user=await User.aggregate([
+    const postHistory=await Post.find({'owner':req.user._id})
+
+    return res.status(200)
+    .json(new ApiResponse(200,postHistory,"postHistory Fetched successfully"))
+})
+
+const getConnections=asyncHandler(async(req,res)=>{
+    const {userId}=req.body
+
+    const userlist=await User.aggregate([
         {
             $match:{
-                _id:new mongoose.Types.ObjectId(req.user._id)
+                _id:new mongoose.Types.ObjectId(userId?userId:req.user._id)
             }
         },
         {
             $lookup:{
-                from:"posts",
-                localField:"postHistory",
-                foreignField:"_id",
-                as:"postHistory",
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"subscriber",
+                as:"whomFollowed",
                 pipeline:[
                     {
                         $lookup:{
                             from:"users",
-                            localField:"owner",
+                            localField:"channel",
                             foreignField:"_id",
-                            as:"owner",
+                            as:"user",
                             pipeline:[
                                 {
                                     $project:{
+                                        userName:1,
                                         fullName:1,
-                                        username:1,
                                         avatar:1
+                                        
                                     }
                                 }
                             ]
                         }
                     },
                     {
-                        $addFields:{
-                            owner:{
-                                $first:"$owner"
-                            }
+                        $project:{
+                            _id:0,
+                            user:1,
                         }
+                    },
+                    {
+                        $unwind:"$user"
                     }
+                    
                 ]
             }
         },
         {
-            $addFields:{
-                postHistory:{
-                    $first:"$postHistory"
-                }
+            $project:{
+                whomFollowed:1,
+                createdAt: 1 
+
             }
+        },
+        {
+            $unwind:"$whomFollowed"
+        },
+        {
+            $sort: {
+                createdAt: -1 
+            }
+        },
+
+        {
+            $limit:5
         }
     ])
+    
+    const result = userlist.map(user => ({
+        _id: user.whomFollowed.user._id,
+        userName: user.whomFollowed.user.userName,
+        fullName: user.whomFollowed.user.fullName,
+        avatar: user.whomFollowed.user.avatar,
+    }));
 
-    console.log(user)
+    res.status(201)
+    .json(new ApiResponse(201,result,"Connection List Fetched"))
 
-    return res.status(200)
-    .json(new ApiResponse(200,user[0].postHistory,"postHistory Fetched successfully"))
 })
 
 export {
@@ -369,5 +474,7 @@ export {
     updateUserAvatar,
     updateAccountDetails,
     getUserChannelProfile,
-    getPostHistory
+    getPostHistory,
+    updateSubscription,
+    getConnections
 }

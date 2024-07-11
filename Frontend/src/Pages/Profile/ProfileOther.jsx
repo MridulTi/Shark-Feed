@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { PiSignpostFill } from "react-icons/pi"
 import { RiAddCircleFill, RiArrowDropLeftLine, RiStoreFill, RiBarChartFill, RiUser2Fill } from "react-icons/ri";
 import { Button } from "@material-tailwind/react";
@@ -20,21 +20,48 @@ import {
     Tab,
     TabPanel,
 } from "@material-tailwind/react";
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import { Edit } from '@/Components/Cards';
 
 
 
 export default function ProfileOther() {
+    
+    const {username}=useParams()
+    const[userData,setUserData]=useState({})
+
+    useEffect(()=>{
+        axios.get(`api/v1/users/c/${username}`)
+            .then(res=>{
+                setUserData(res.data.data)
+            })
+            .catch(err=>{
+                console.error(err)
+            })
+    },[username])
+    
     return (
         <>
             <div className=" grid grid-flow-col min-h-screen place-items-start px-52 mx-52 gap-6">
-                <MainContent />
+                <MainContent userData={userData}/>
                 <Footer />
             </div>
         </>
     )
 }
 
-function MainContent() {
+function MainContent({userData}) {
+    function handleActivity(){
+        axios.get("api/v1/users/profile")
+            .then(res=>{
+                console.log(res.data)
+            })
+            .catch(err=>{
+                console.error(err)
+            })
+    }
+    const [ActivityData, setActivityData] = React.useState();
     const [activeTab, setActiveTab] = React.useState("dashboard");
     const data = [
         {
@@ -47,7 +74,7 @@ function MainContent() {
             label: "Activity",
             value: "profile",
             icon: <PiSignpostFill/>,
-            desc: <Activity/>,
+            desc: <Activity onClick={handleActivity} ActivityData={ActivityData}/>,
         },
         {
             label: "Product",
@@ -56,21 +83,36 @@ function MainContent() {
             desc: <Product/>,
         },
     ];
+
+    function handleSubscription(){
+        axios.patch('api/v1/users/update-subscription',{_id:userData._id})
+        .then(res=>{
+            console.log(res.data)
+            window.location.reload()
+        })
+        .catch(err=>{
+            console.error(err)
+        })
+    }
     return (
         <div>
-            <div className='grid gap-4 grid-flow-col bg-white p-6 border-2 rounded-xl'>
+            <div className='flex gap-24 bg-white p-6 border-2 rounded-xl'>
                 <div className=''>
-                    <Avatar src="https://docs.material-tailwind.com/img/face-2.jpg" size='xxl' alt="avatar" className='border-4 border-base-primary ' />
+                    <Avatar src={userData.avatar!=""?userData.avatar:"https://docs.material-tailwind.com/img/face-2.jpg"} size='xxl' alt="avatar" className='max-w-96  max-h-96 border-4 border-base-primary ' />
                 </div>
                 <div className='grid gap-2'>
-                   <div className='grid gap-2 pb-10'>
-                   <h1 className='font-semibold text-2xl'>Prashant Singh</h1>
-                    <h2 className='font-semibold text-md'>Unicorn:Bharat pay</h2>
-                    <div className=' text-sm'>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Aliquid, voluptatum explicabo? Quod, culpa exercitationem. Illum eos, accusantium ab impedit dolorum iure corrupti minus harum quasi voluptatem! Deserunt explicabo reiciendis accusantium!</div>
-                   </div>
                    <div className='grid gap-2'>
+                   <div className='flex gap-4 items-center'>
+                    <h1 className='font-semibold text-2xl'>{userData.fullName}</h1>
+                   <Button className={`tracking-widest ${userData.isSubscribed?"bg-gray-5 border border-black text-gray-10":""}`} onClick={handleSubscription} >{userData.isSubscribed? "UnSubscribe":"Subscribe"}</Button>
+                   </div>
+
+                    <h2 className='font-semibold text-md text-gray-1'>{userData.companyName}</h2>
+                    {userData.bio &&<div className=' text-sm max-w-[52rem]'>{userData.bio}</div>}
+                   </div>
+                   {/* <div className='grid gap-2'>
                    <h1 className='text-xl font-semibold'>Current Invester</h1>
-                    <div className='flex gap-10'>
+                    <div className='flex items-center -space-x-4'>
                     <Avatar
                                 variant="circular"
                                 alt="user 1"
@@ -102,13 +144,26 @@ function MainContent() {
                                 src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1760&q=80"
                             />
                     </div>
+                   </div> */}
+                   <div className='flex gap-4 justify-start'>
+                    {/* Following */}
+                    <div className='flex gap-2'>
+                    <h1 className='font-extrabold'>{userData.subscribersCount}</h1>
+                    <h1>Followers</h1>
                    </div>
-                    <div className='flex gap-4 py-4'>
+                   {/* Followers */}
+                   <div className='flex gap-2'>
+                   <h1 className='font-extrabold'>{userData.channelsSubscribedToCount}</h1>
+                    <h1>Following</h1>
+                   </div>
+                   </div>
+                   
+                    {/* <div className='flex gap-4 py-4'>
             <button className='bg-base-accent rounded-full py-2 px-6  text-gray-5 text-md flex place-items-center gap-4'><RiAddCircleFill className='text-2xl'/>Invest</button>
             <button className='bg-base-secondary border-2 border-base-accent hover:bg-base-accent hover:text-gray-5 rounded-full py-2 px-6 place-items-center text-gray-10 text-md flex gap-4'><RiUser2Fill className='text-2xl'/> Connect</button>
                     
                         
-                    </div>
+                    </div> */}
                 </div>
             </div>
             <div className=''>
