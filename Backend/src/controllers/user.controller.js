@@ -223,12 +223,34 @@ const getCurrentUser = asyncHandler(async (req, res) => {
             },
         },
         {
+            $lookup:{
+                from:"bids",
+                localField:"_id",
+                foreignField:"owner",
+                as:"bidsMade"
+            }
+        },
+        {
+            $lookup:{
+                from:"investors",
+                localField:"_id",
+                foreignField:"owner",
+                as:"InvestedC"
+            }
+        },
+        {
             $addFields:{
                 subscribersCount:{
                     $size:"$subscribers"
                 },
                 channelsSubscribedToCount:{
                     $size:"$subscribedTo"
+                },
+                bidsMadeCount:{
+                    $size:"$bidsMade"
+                },
+                InvestedCompanyCount:{
+                    $size:"$InvestedC"
                 },
                 isSubscribed:{
                     $cond:{
@@ -295,6 +317,8 @@ const updateSubscription=asyncHandler(async(req,res)=>{
     let subscribed=null;
     if (user){
         subscribed=await Subscription.deleteOne({subscriber:req.user._id,channel:_id})
+        await sendNotification(req.user._id, 'subscribe');
+
     }
     else{
         subscribed=await Subscription.create({
@@ -464,6 +488,17 @@ const getConnections=asyncHandler(async(req,res)=>{
 
 })
 
+const searchUser=asyncHandler(async(req,res)=>{
+    const { query } = req.body;
+    if (!query) throw new ApiError(404,"Query parameter is required");
+
+    const users = await User.find({ userName: { $regex: query, $options: 'i' } }).limit(10);
+    if(!users) throw new ApiError(404,"No such user exists");
+
+    res.status(201)
+    .json(new ApiResponse(201,users,"User fetched"))
+})
+
 export {
     registerUser, 
     loginUser,
@@ -476,5 +511,6 @@ export {
     getUserChannelProfile,
     getPostHistory,
     updateSubscription,
-    getConnections
+    getConnections,
+    searchUser
 }

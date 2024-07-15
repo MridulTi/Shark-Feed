@@ -14,4 +14,4 @@ const InvestorSchema=new mongoose.Schema({
     }
 },{timestamps:true})
 
-export const Investor=mongoose.model("Bid",InvestorSchema)
+export const Investor=mongoose.model("Investor",InvestorSchema)

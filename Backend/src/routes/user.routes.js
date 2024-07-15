@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changeCurrentPassword, getConnections, getCurrentUser, getPostHistory, getUserChannelProfile, loginUser, logoutUser, refreshAccessToken, registerUser, updateAccountDetails, updateSubscription, updateUserAvatar } from "../controllers/user.controller.js";
+import { changeCurrentPassword, getConnections, getCurrentUser, getPostHistory, getUserChannelProfile, loginUser, logoutUser, refreshAccessToken, registerUser, searchUser, updateAccountDetails, updateSubscription, updateUserAvatar } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js"
 import { verifyJWT } from "../middlewares/auth.middle.js";
 import { getProfileDetails} from "../controllers/post.controller.js";
@@ -34,6 +34,8 @@ router.route("/update-subscription").patch(verifyJWT,updateSubscription)
 // Profile Info
 router.route("/profile").get(verifyJWT,getProfileDetails)
 router.route("/connections").post(verifyJWT,getConnections)
+router.route("/search").post(verifyJWT,searchUser)
+
 
 // router.route("/login").post(login)
 

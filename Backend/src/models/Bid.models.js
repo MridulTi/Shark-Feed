@@ -14,6 +14,10 @@ const bidSchema=new mongoose.Schema({
     },
     equityWant:{
         type:String
+    },
+    isAccepted:{
+        type:Boolean,
+        default:false
     }
 },{timestamps:true})
 

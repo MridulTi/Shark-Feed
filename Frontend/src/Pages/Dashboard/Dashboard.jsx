@@ -10,24 +10,38 @@ export default function Dashboard() {
   window.scrollTo(0,0)
 
   const [feedData, setFeedData] = useState([]);
-  
-  useEffect(() => {
-    // Make GET request to localhost:3000/feed
+  const [Info,setMyInfo]=useState({})
+  function getFeed(){
     axios.get('/api/v1/home/get-feed')
       .then(response => {
-        // Update state with response data
         console.log(response.data.data)
         setFeedData(response.data.data);
       })
       .catch(error => {
         console.error('Error fetching feed:', error);
       });
+  }
+
+  function currentInfo(){
+    axios.get('/api/v1/users/current-user')
+      .then(response => {
+        console.log(response.data.data)
+        setMyInfo(response.data.data);
+      })
+      .catch(error => {
+        console.error('Error fetching feed:', error);
+      });
+  }
+
+  useEffect(() => {
+    getFeed();
+    currentInfo()
   }, []);
 
   return (
     <div className='min-h-screen h-full w-full grid justify-center items-start px-32'>
       <div className='grid grid-flow-col place-items-start gap-10'>
-      <MyInfo />
+      <MyInfo info={Info}/>
       <div className='rounded-xl grid gap-6 col-span-1'>
         <Post/>
         <UnderlineTabs/>
@@ -47,45 +61,24 @@ export default function Dashboard() {
   )
 }
 
-function MyInfo(){
+function MyInfo({info}){
   return(
     <div className='h-fit bg-gray-5 p-5 grid place-items-center rounded-xl'>
-      <Link to="/Profile"><Avatar src="https://docs.material-tailwind.com/img/face-2.jpg" alt="avatar" className='border-4 border-base-accent' size='xxl'/></Link>
-      <div className='text-center'>
-        <h1 className='font-semibold text-md py-2'>Mridul Tiwari</h1>
-        <h1 className='font-semibold text-sm py-2 text-gray-6'>Unicorn: Bharat Pay | Accenture</h1>
-      </div>
-      <div className='py-6 border-t-2 text-xs'>
-      <div className='grid grid-flow-col gap-32 '>
-        <h1 className='text-gray-1'>Bids Made</h1>
-        <h1 className='text-base-accent'>25</h1>
-      </div>
-      <div className='grid grid-flow-col gap-16'>
-        <h1 className='text-gray-1'>Invested Companies</h1>
-        <h1 className='text-base-accent'>25</h1>
-      </div>
-      </div>
-      <div className='py-6 border-t-2 text-xs'>
-        <h1 className='font-semibold pb-4'>Recent</h1>
-      <div className='grid grid-flow-col gap-32 '>
-        <h1 className='text-gray-1'>Bids Made</h1>
-        <h1 className='text-base-accent'>25</h1>
-      </div>
-      <div className='grid grid-flow-col gap-16'>
-        <h1 className='text-gray-1'>Invested Companies</h1>
-        <h1 className='text-base-accent'>25</h1>
-      </div>
-      </div>
-      <div className='py-6 border-t-2 text-xs'>
-        <h1 className='font-semibold pb-4'>Groups</h1>
-      <div className='grid grid-flow-col gap-32 '>
-        <h1 className='text-gray-1'>Bids Made</h1>
-        <h1 className='text-base-accent'>25</h1>
-      </div>
-      <div className='grid grid-flow-col gap-16'>
-        <h1 className='text-gray-1'>Invested Companies</h1>
-        <h1 className='text-base-accent'>25</h1>
-      </div>
+      <Link to="/Profile" className='grid place-items-center'><Avatar src={info.avatar} alt="avatar" className='border-4 border-base-accent' size='xxl' />
+        <div className='text-center'>
+          <h1 className='font-semibold text-md hover:underline underline-offset-2'>{info.fullName}</h1>
+          <h1 className='font-semibold text-gray-2 text-sm'>@ {info.userName}</h1>
+          <h1 className='font-semibold text-sm py-2 text-base-primary'>{info.companyName}</h1>
+        </div></Link>
+      <div className='py-4 border-t-2 text-xs'>
+        <div className='grid grid-flow-col gap-28 '>
+          <h1 className='text-gray-1'>Bids Made</h1>
+          <h1 className='text-base-accent font-extrabold'>{info.bidsMadeCount}</h1>
+        </div>
+        <div className='grid grid-flow-col gap-14'>
+          <h1 className='text-gray-1'>Invested Companies</h1>
+          <h1 className='text-base-accent font-extrabold'>{info.InvestedCompanyCount}</h1>
+        </div>
       </div>
     </div>
   )

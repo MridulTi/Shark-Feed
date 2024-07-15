@@ -1,16 +1,53 @@
 import { useModal } from '@/Context/ModalContext'
-import { Avatar, Button, CardBody, CardFooter, CardHeader, Carousel, Dialog, DialogBody, DialogFooter, DialogHeader, Input, Textarea, Typography } from '@material-tailwind/react'
+import { Avatar, Button, Card, CardBody, CardFooter, CardHeader, Carousel, Dialog, DialogBody, DialogFooter, DialogHeader, Input, Textarea, Typography } from '@material-tailwind/react'
 import axios from 'axios'
-import {  Card, Checkbox, FileInput } from 'flowbite-react'
-import { Edit2, Edit2Icon } from 'lucide-react'
-import React, { useState } from 'react'
-import { RiAttachment2, RiEdit2Fill } from 'react-icons/ri'
-
+import { Edit2, Edit2Icon, FileInput } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { RiAttachment2, RiEdit2Fill, RiHeart3Fill, RiHeart3Line } from 'react-icons/ri'
+import { IoChatbubbleOutline } from "react-icons/io5";
 import { HiOutlineEmojiHappy } from "react-icons/hi";
 import { HiOutlineGif } from "react-icons/hi2";
 import { Link } from 'react-router-dom'
+import PostsModal from './PostsModal'
 
 export const PostCards = ({ post }) => {
+    const [open, setOpen] = React.useState(false);
+ 
+    const handleOpen = () => setOpen(!open);
+    const [commentArray,setCommentArray]=useState([])
+    const [likedByCurrentUser,setLikedByUser]=useState(post.likedByCurrentUser)
+    function openComment(id){
+        console.log('h1')
+        axios.post('api/v1/posts/get-comment',{postId:id})
+        .then(res=>{
+            setCommentArray(res.data.data)
+            // console.log(res)
+        })
+        .catch(err=>{
+            console.error(err)
+        })
+    }
+    function getLike(id){
+        axios.get('api/v1/posts/get-like')
+        .then(res=>{
+            console.log(res)
+        })
+        .catch(err=>{
+            console.error(err)
+        })
+    }
+    function handleLike(id){
+        axios.post('api/v1/posts/post-like',{postId:id})
+        .then(res=>{
+            setLikedByUser(res.data.data)
+        })
+        .catch(err=>{
+            console.error(err)
+        })
+    }
+    
+
+
     return (
         <div className='bg-gray-5 rounded-lg p-5 w-full h-fit'>
             <Link to={`/:${post.owner[0].userName}`}><div className='flex cursor-pointer gap-4'>
@@ -38,9 +75,49 @@ export const PostCards = ({ post }) => {
                 })}
                
             </Carousel>
+            <div className='flex gap-4 py-2 px-5'>
+                <div onClick={()=>{
+                    handleLike(post._id)
+                    
+                    }}>
+                    {likedByCurrentUser?<RiHeart3Fill className='text-3xl text-semantics-2'/>:<RiHeart3Line className='text-3xl cursor-pointer'/>}
+                </div>
+            <IoChatbubbleOutline className='text-3xl' onClick={()=>{
+                openComment(post._id);
+                handleOpen()
+            }}/>
+            <PostsModal open={open} handleOpen={handleOpen} postData={post} commentArray={commentArray}/>
+            </div>
         </div>
     )
 }
+
+export const CommentModal=({open,handleOpen,commentArray})=>{
+    
+  return (
+    <>
+      <Dialog open={open} handler={handleOpen}>
+        <DialogHeader>
+          <Typography variant="h5" color="blue-gray">
+            Your Attention is Required!
+          </Typography>
+        </DialogHeader>
+        <DialogBody divider className="grid place-items-start gap-4">
+         
+        </DialogBody>
+        <DialogFooter className="space-x-2">
+          <Button variant="text" color="blue-gray" onClick={handleOpen}>
+            close
+          </Button>
+          <Button variant="gradient" onClick={handleOpen}>
+            Ok, Got it
+          </Button>
+        </DialogFooter>
+      </Dialog>
+    </>
+  );
+}
+
 export const Edit = () => {
     const [open, setOpen] = React.useState(false);
 

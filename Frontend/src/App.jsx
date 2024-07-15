@@ -51,7 +51,7 @@ function App() {
         {
           path:"/:username",
           element:<ProfileOther/>
-        }
+        },
       ],
     },
   ]);

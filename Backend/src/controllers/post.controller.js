@@ -7,6 +7,33 @@ import { Post } from "../models/Post.models.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { Subscription } from "../models/Subscription.models.js"
+import { Notification } from "../models/Notification.js"
+
+
+const sendNotification=async(recipientId,type,postId,userId)=>{
+    console.log(userId,postId)
+    let content;
+    switch(type){
+        case "subscribe":
+            content=`has subscribed you.`
+            break
+        case "like":
+            content=`has liked your post.` 
+            break
+
+        case "comment":
+            content=`has commented on your post.`
+            break
+
+    }
+    const notification = await Notification.create({
+        recipient:recipientId,
+        owner: userId,
+        type,
+        link:postId,
+        content,
+      });
+}
 
 const getLikeCount = asyncHandler(async (req, res) => {
     const { postId } = req.body
@@ -58,17 +85,35 @@ const getLikeCount = asyncHandler(async (req, res) => {
 
 const postLike = asyncHandler(async (req, res) => {
     const { postId, commentId } = req.body;
+    console.log(postId,commentId)
 
     if (!(postId || commentId)) throw new ApiError(401, "Empty like Info");
+    let like;
+    const likedUser=await Like.findOne({likedBy: req.user._id,
+        comment: commentId? commentId:undefined,
+        post: postId});
 
-    const like = Like.create({
-        likedBy: req.user._id,
-        comment: commentId,
-        post: postId
-    })
+    if (likedUser){
+        like=await Like.deleteOne({likedBy: req.user._id,
+            comment: commentId? commentId:undefined,
+            post: postId})
+    }else{
+        like = await Like.create({
+            likedBy: req.user._id,
+            comment: commentId? commentId:undefined,
+            post: postId
+        })
+
+        
+
+    const user=await Post.findOne({_id:postId})
+    // console.log(user.owner.toString())
+    await sendNotification(user.owner,'like',postId,req.user._id);
+    }
+    
 
     res.status(201)
-        .json(new ApiResponse(201, like, "Like Posted Successfully"))
+        .json(new ApiResponse(201, like.acknowledged?false:true, "Like Posted Successfully"))
 
 })
 
@@ -82,14 +127,19 @@ const postComment = asyncHandler(async (req, res) => {
         description,
         post: post
     })
-    console.log(comment)
     const commentedUser = await Comment.findById(comment._id)
+    const user=await Post.findOne({_id:post})
+    console.log(user)
+
+    await sendNotification(user.owner,'comment', post,req.user._id);
+
     res.status(201)
         .json(new ApiResponse(201, commentedUser, "Comment Created Successfully"))
 })
 
 const getComment = asyncHandler(async (req, res) => {
     const { postId } = req.body
+    console.log(postId)
     const comment = await Post.aggregate([
         {
             $match: {
@@ -113,6 +163,7 @@ const getComment = asyncHandler(async (req, res) => {
                                 {
                                     $project: {
                                         _id: 0,
+                                        avatar:1,
                                         "fullName": 1,
                                         "userName": 1,
                                         "email": 1
@@ -217,20 +268,6 @@ const getProfileDetails = asyncHandler(async (req, res) => {
 
 // HOME SECTION
 const getFeed = asyncHandler(async (req, res) => {
-    // const{interest}=req.body;
-
-    // if (!interest || !Array.isArray(interest)) {
-    //     throw new ApiError(400, "Interests must be provided as an array");
-    // }
-
-    // const allPosts=await Post.find();
-
-    // const feed = allPosts.filter(post => {
-    //     const tagsArray = post.tags.split(',').map(tag => tag.trim().toLowerCase());
-    //     return interest.some(userInterest => tagsArray.includes(userInterest.toLowerCase()));
-    // });
-    // console.log(feed)
-    // if (feed.length === 0) throw new ApiError(401,"No Post found that matched User's interest")
 
     const feed = await Post.aggregate([
         {
@@ -245,11 +282,49 @@ const getFeed = asyncHandler(async (req, res) => {
                             fullName: 1,
                             userName: 1
                         }
-                    }
+                    },
                 ]
+            },
+        },
+        {
+            $lookup: {
+                from: "likes",
+                let: { postId: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$post", "$$postId"] },
+                                    { $eq: ["$likedBy", new mongoose.Types.ObjectId(req.user._id)] }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        $count: "likeCount"
+                    }
+                ],
+                as: "likes"
             }
-
+        },
+        {
+            $addFields: {
+                likedByCurrentUser: {
+                    $cond: {
+                        if: { $gt: [{ $size: "$likes" }, 0] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                likes: 0
+            }
         }
+        
     ])
 
     res.status(201)
@@ -320,6 +395,57 @@ const getFollowingPosts=asyncHandler(async(req,res)=>{
     .json(new ApiResponse(201,posts[0].data,"Following Posts Fetched"))
 })
 
+const getNotification=asyncHandler(async(req,res)=>{
+    
+    const notify=await Notification.aggregate([
+        {
+            $match:{
+                recipient:new mongoose.Types.ObjectId(req.user._id),
+            }
+        },
+        {
+            $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"User",
+                pipeline:[
+                    {
+                        $project:{
+                            avatar:1,
+                            fullName:1,
+                            userName:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $sort:{
+                createdAt: -1
+            }
+        }
+    ])
+
+    if(!notify) throw new ApiError("No Notifications found")
+
+
+    res.status(201)
+    .json(new ApiResponse(201,notify,"Notifications Fetched"))
+})
+
+const markNotifyRead=asyncHandler(async(req,res)=>{
+    const notify=await Notification.updateMany(
+        {recipient:req.user._id},
+        {read:true},
+    )
+    if(!notify) throw new ApiError(404,"Notification Not Found");
+    
+    res.status(201)
+    .json(new ApiResponse(201,notify,"Notification Marked."))
+})
+
+
 export {
     getLikeCount,
     getComment,
@@ -328,6 +454,9 @@ export {
     postLike,
     getProfileDetails,
     getFeed,
-    getFollowingPosts
+    getFollowingPosts,
+    sendNotification,
+    getNotification,
+    markNotifyRead
 
 }

@@ -93,11 +93,24 @@ export default function Profile() {
 }
 
 function AllBids({ ActivityData }) {
-    
+    const [bidDetail,setBidDetails]=useState({
+        isAccepted:false
+    })
     function removeBids(){
         axios.delete('api/v1/posts/clearBids')
             .then(res=>{
-                console.log(res)
+                ActivityData=false
+                console.log(res.data.data)
+            })
+            .catch(err=>{
+                console.error(err)
+            })
+    }
+    function handleAccept(id){
+        axios.post('api/v1/posts/accept-bids',{userId:id})
+            .then(res=>{
+                    setBidDetails(res.data.data)
+                    console.log(bidDetail)
             })
             .catch(err=>{
                 console.error(err)
@@ -108,9 +121,11 @@ function AllBids({ ActivityData }) {
         <div className="grid gap-6 place-items-center">
             {ActivityData &&
                 ActivityData.map(post => {
+                    
                     return (
-                        <Link to={`/:${post.owner[0].userName}`}><div className='flex cursor-pointer hover:bg-gray-5 p-4 rounded-xl items-center gap-6'>
-                            <Avatar size='sm' src='https://docs.material-tailwind.com/img/face-2.jpg' />
+                        <div className='flex cursor-pointer hover:bg-gray-5 p-4 rounded-xl items-center gap-6'>
+                            <Link to={`/:${post.owner[0].userName}`}><Avatar size='sm' src='https://docs.material-tailwind.com/img/face-2.jpg' /></Link>
+                            <Link to={`/:${post.owner[0].userName}`}>
                             <div>
                                 <div className='text-left'>
                                     <p className='text-md font-semibold'>{post.owner[0].fullName}</p>
@@ -118,17 +133,21 @@ function AllBids({ ActivityData }) {
 
                                 </div>
                             </div>
+                            </Link>
 
                             <div className='flex place-items-end pl-24'>
                                 <div className="grid gap-0 px-12">
                                     <p className='text-sm text-gray-6'>Price: {post.price}</p>
                                     <p className='text-sm text-gray-9'>Equity: {post.equityWant}</p>
                                 </div>
-                                <Button size='md'>Accept</Button>
+                                <Button size='md'
+                                 className={`${bidDetail.isAccepted?"cursor-not-allowed opacity-25":"cursor-pointer"}`}
+                                 style={{ backgroundColor: bidDetail.isAccepted ? 'white' : 'black', color: bidDetail.isAccepted ? 'black' : 'white' }}
+                                  onClick={()=>handleAccept(post.owner[0]._id) }
+                                >Accept</Button>
                             </div>
                             
                         </div>
-                        </Link>
                     )
                 })
             }

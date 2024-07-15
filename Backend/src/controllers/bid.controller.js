@@ -108,16 +108,26 @@ const getMyBids=asyncHandler(async(req,res)=>{
 })
 
 const postBids=asyncHandler(async(req,res)=>{
-    const{companyId,price, equityWant}=req.body
+    const{companyId,price, equityWant}=req.body;
+    let bid;
 
     if (!(price && equityWant)) throw new ApiError(401, "Price or equity not mentioned");
     
-    const bid=Bid.create({
-        owner:req.user._id,
-        companyTo:companyId,
-        price,
-        equityWant
-    })
+    const user =await Bid.findOne({'companyTo':companyId,'owner':req.user._id});
+
+    if(user){
+        bid=await Bid.findOneAndUpdate({'owner':req.user._id,
+            'companyTo':companyId},{'price':price,
+                'equityWant':equityWant})
+    }else{
+        bid=await Bid.create({
+            owner:req.user._id,
+            companyTo:companyId,
+            price,
+            equityWant
+        })
+    }
+    
 
     // console.log(bid)
     res.status(201)
@@ -159,7 +169,9 @@ const getPost=asyncHandler(async(req,res)=>{
 })
 
 const delbids=asyncHandler(async(req,res)=>{
-    const user=Bid.deleteMany({'companyTo':req.user._id});
+    const user=await Bid.deleteMany({'companyTo':req.user._id});
+
+    if(!user) throw new ApiError(401,"no user found")
 
     res.status(201)
     .json(new ApiResponse(201,user,"Bids for this account are cleared"))
@@ -171,17 +183,18 @@ const acceptBids=asyncHandler(async(req,res)=>{
     if(!userId) throw new ApiError(404,"UserId not specified");
 
     const share=await Bid.find({owner:userId,companyTo:req.user._id}).select('equityWant')
-
+    console.log(share[0])
     const Invest=await Investor.create({
         owner:userId,
         companyTo:req.user._id,
-        shares:share
+        shares:share[0].equityWant
     })
 
     if (!Invest) throw new ApiError(404, "Investor data couldn't be saved");
 
+    const set=await Bid.findOneAndUpdate({owner:userId,companyTo:req.user._id},{isAccepted:true})
     res.status(201)
-    .json(new ApiResponse(201,true,"Investor data saved"))
+    .json(new ApiResponse(201,set,"Investor data saved"))
 })
 
 export {
